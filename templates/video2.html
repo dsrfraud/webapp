@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Video Capture</title>
+  </head>
+  <body>
+    <video id="video" width="640" height="480" autoplay></video>
+    <br>
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    <br>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <br>
+    <button id="submitButton">Submit Video</button>
+    <div id="message"></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+      const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const startButton = document.getElementById('startButton');
+const stopButton = document.getElementById('stopButton');
+const submitButton = document.getElementById('submitButton');
+const message = document.getElementById('message');
+
+let stream;
+let recorder;
+let chunks = [];
+
+const startRecording = () => {
+  navigator.mediaDevices.getUserMedia({
+    video: true,
+    audio: false
+  }).then(mediaStream => {
+    stream = mediaStream;
+    video.srcObject = stream;
+    recorder = new MediaRecorder(stream, {
+      mimeType: 'video/webm'
+    });
+    recorder.addEventListener('dataavailable', event => {
+      chunks.push(event.data);
+    });
+    recorder.start();
+    startButton.disabled = true;
+    stopButton.disabled = false;
+    setTimeout(stopRecording, 5000);
+  });
+};
+
+const stopRecording = () => {
+  recorder.stop();
+  stream.getTracks().forEach(track => {
+    track.stop();
+  });
+  startButton.disabled = false;
+  stopButton.disabled = true;
+  submitButton.disabled = false;
+};
+
+const submitVideo = () => {
+  const blob = new Blob(chunks, {
+    type: 'video/webm'
+  });
+  const formData = new FormData();
+  formData.append('video', blob, 'video.webm');
+  $.ajax({
+    url: '/upload',
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    success: (data) => {
+      message.innerText = 'Video uploaded successfully' + data;
+    },
+    error: () => {
+      message.innerText = 'Failed to upload video';
+    }
+  });
+};
+
+startButton.addEventListener('click', startRecording);
+stopButton.addEventListener('click', stopRecording);
+submitButton.addEventListener('click', submitVideo);
+
+    </script>
+  </body>
+</html>

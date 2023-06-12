@@ -1,0 +1,58 @@
+{%extends "base.html" %}
+{% block content %}
+<!-- <div class="container text-center">
+    <img src="{{ url_for('video') }}" width="50%"/>
+</div> -->
+
+
+<!-- Include the Bootstrap CSS and JS files -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+<!-- Add a button to trigger the webcam modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#webcamModal">
+  Open Webcam
+</button>
+
+<!-- Define the webcam modal -->
+<div class="modal fade" id="webcamModal" tabindex="-1" role="dialog" aria-labelledby="webcamModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="webcamModalLabel">Webcam</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <video id="webcamVideo" width="100%" height="auto" autoplay></video>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add the JavaScript code to open the webcam modal -->
+<script>
+  // Get the webcam video element
+  const webcamVideo = document.getElementById('webcamVideo');
+  
+  // Use the getUserMedia() method to access the webcam
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      webcamVideo.srcObject = stream;
+      console.log(stream)
+    })
+    .catch(error => {
+      console.error(error);
+      alert('Unable to access the webcam.');
+    });
+</script>
+
+
+
+{% endblock %}

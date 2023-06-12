@@ -1,29 +1,29 @@
 {%extends "base.html" %}
 {%block content%}
-  
+
 <div class="container">
     <div class="row">
-        <div class="col"></div>
-        <div class="col">
-           <form action="" method="post" enctype = 'multipart/form-data'>
-            <div class="form-group">
-                <label for="">Enter image</label>
-                
-                <input type="file" name="image" class="form-control" id="inputGroupFile01">
-                <!-- <input type="text" class="form-control" name="image"> -->
-              </div>
-            <button class="btn btn-primary" type="submit">Submit</button>
+        <div class="col-sm-12 col-xs-12 col-md-4 col-lg-4 col-xl-4"></div>
+        <div class="col-sm-12 col-xs-12 col-md-4 col-lg-4 col-xl-4 text-center">
+            <form action="" method="post" enctype='multipart/form-data'>
+                <div class="form-group">
+                    <label class="form-label" for=""><h3>Enter Pan RAJA Card</h3></label>
 
-           </form>
+                    <input type="file" name="image" class="form-control" id="inputGroupFile01">
+                    <!-- <input type="text" class="form-control" name="image"> -->
+                </div>
+                <button class="btn btn-primary mt-2 text-center" type="submit">Fetch Details</button>
+
+            </form>
         </div>
-        <div class="col"></div>
+        <div class="col-sm-12 col-xs-12 col-md-4 col-lg-4 col-xl-4"></div>
     </div>
 </div>
 
 {% if filename %}
-<div class="container">
+<div class="container mt-3">
     <div class="row" style="max-height: 60vh; width: 100%;">
-        <div class="col-sm-12 col-md-6 col-lg-6 col-xl-6 border border-danger">
+        <div class="col-sm-12 col-md-6 col-lg-6 col-xl-6 border border-2 border-danger">
             <img id="picture" src="data:image/jpeg;base64,{{ filename }}" style="max-width: 100%;">
         </div>
         <div class="col-sm-12 col-md-6 col-lg-6 col-xl-6">
@@ -31,7 +31,7 @@
         </div>
     </div>
 </div>
-	
+
 {% endif %}
-  
+
 {% endblock %}

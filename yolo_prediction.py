@@ -9,7 +9,7 @@ import torchvision
 import cv2
 import numpy as np
 import numpy as np
-import matplotlib.pyplot as plt
+
 from PIL import Image
 import cv2
 import numpy as np
@@ -25,7 +25,7 @@ from skimage.transform import rotate
 from skimage.feature import canny
 from skimage.io import imread
 from skimage.color import rgb2gray
-import matplotlib.pyplot as plt
+
 from scipy.stats import mode
 
 
@@ -33,27 +33,28 @@ from scipy.stats import mode
 
 
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd=r'C:\Users\ACER\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+# pytesseract.pytesseract.tesseract_cmd=r'C:\Users\ACER\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 
 
 # In[15]:
 
 
-model_path = r'C:\Users\ACER\Downloads\Pan\yolo\yolov5\runs\train\exp40\weights\best.pt'
+model_path = r'/home/ubuntu/webapp/models/best.pt'
 model = torch.hub.load('ultralytics/yolov5', 'custom',path=model_path)
 
 
 # In[16]:
 
 
-image_path = r"D:\Pan\pandata\final_data\pancard_1.jpeg"
+# image_path = r"D:\Pan\pandata\final_data\pancard_1.jpeg"
 
 
-image = rgb2gray(imread(image_path))
-edges = canny(image)
-# Classic straight-line Hough transform
-tested_angles = np.deg2rad(np.arange(0.1, 180.0))
-h, theta, d = hough_line(edges, theta=tested_angles)
+# image = rgb2gray(imread(image_path))
+# edges = canny(image)
+# # Classic straight-line Hough transform
+# tested_angles = np.deg2rad(np.arange(0.1, 180.0))
+# h, theta, d = hough_line(edges, theta=tested_angles)
 
 
 
@@ -98,10 +99,10 @@ def skew_angle_hough_transform(image):
     return skew_angle
 
 
-skew = skew_angle_hough_transform(image)
+# skew = skew_angle_hough_transform(image)
 
 
-img = rotate_image(image, skew[0]+180)
+# img = rotate_image(image, skew[0]+180)
 
 def is_valid_pan(pan):
     pattern = r'^[A-Z]{5}[0-9]{4}[A-Z]$'
@@ -181,73 +182,7 @@ def find_skew_angle(img):
     tested_angles = np.deg2rad(np.arange(0.1, 180.0))
     h, theta, d = hough_line(edges, theta=tested_angles)
 
-    skew = skew_angle_hough_transform(image)
+    skew = skew_angle_hough_transform(gray_img)
     return skew[0]
-
-
-
-# image_path = r"D:\Pan\pandata\final_data\pancard_111.jpeg"
-
-
-# real_image = cv2.imread(image_path)
-# cv2.imshow("image", real_image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-# skew_angle = find_skew_angle(real_image)
-# skew_angle
-
-
-
-# In[19]:
-
-
-# rotated_image = rotate_image(real_image, skew_angle)
-# rotate90 = rotate90(real_image)
-
-
-# In[ ]:
-
-
-
-
-
-# In[20]:
-
-
-# cv2.imshow("Real Image", real_image)
-# cv2.imshow("Rotated Image", rotated_image)
-# cv2.imshow("Rotated 90", rotate90)
-
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-
-
-# In[21]:
-
-
-# predictions = get_prediction(rotated_image)
-
-
-# In[22]:
-
-
-# results = get_ocr(rotated_image, predictions)
-
-
-# In[23]:
-
-
-# results
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
 
 
