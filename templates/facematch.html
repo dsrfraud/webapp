@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Image Upload and Face Capture</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    #videoContainer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #video {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto;
+    }
+
+    #capturedImage {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 20px auto;
+    }
+
+    #captureButton,
+    #resetButton {
+      display: block;
+      margin: 20px auto;
+    }
+
+    #imageContainer {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container mt-5">
+    <h1>Image Upload and Face Capture</h1>
+    <div class="row">
+      <div class="col-md-6">
+        <h2>Upload Image</h2>
+        <form id="uploadForm" enctype="multipart/form-data">
+          <div class="form-group">
+            <input type="file" class="form-control-file" id="imageInput" accept="image/*" required>
+          </div>
+        </form>
+      </div>
+      <div class="col-md-6">
+        <h2>Capture Live Image</h2>
+        <div id="videoContainer">
+          <video id="video" autoplay></video>
+        </div>
+        <button id="captureButton" class="btn btn-primary">Capture</button>
+        <button id="resetButton" class="btn btn-secondary">Reset</button>
+      </div>
+    </div>
+    <div id="imageContainer">
+      <img id="capturedImage" src="#" alt="Captured Image" style="display: none;">
+    </div>
+    <button id="sendButton" class="btn btn-primary d-block mx-auto">Send Images</button>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      var uploadedImage = null;
+      var capturedImage = null;
+
+      // Get video stream from the camera
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function (stream) {
+          var videoElement = document.getElementById("video");
+          videoElement.srcObject = stream;
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+
+      // Handle image upload
+      $("#imageInput").change(function (e) {
+        var file = e.target.files[0];
+        uploadedImage = file;
+      });
+
+      // Capture live image
+      $("#captureButton").click(function () {
+        var videoElement = document.getElementById("video");
+        var canvas = document.createElement("canvas");
+        var context = canvas.getContext("2d");
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        capturedImage = canvas.toDataURL("image/png");
+        var capturedImageElement = document.getElementById("capturedImage");
+        capturedImageElement.src = capturedImage;
+        capturedImageElement.style.display = "block";
+      });
+
+      // Reset captured image
+      $("#resetButton").click(function () {
+        capturedImage = null;
+        var capturedImageElement = document.getElementById("capturedImage");
+        capturedImageElement.src = "#";
+        capturedImageElement.style.display = "none";
+      });
+
+      // Capture live image and convert to base64
+      function captureImage() {
+        var video = document.getElementById("video");
+        var canvas = document.createElement("canvas");
+        var context = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        var capturedImage = canvas.toDataURL("image/png");
+
+        // Show captured image in a separate element
+        var capturedImageElement = document.getElementById("capturedImage");
+        capturedImageElement.src = capturedImage;
+        capturedImageElement.style.display = "block";
+
+        return capturedImage;
+      }
+
+      // Send images
+      $("#sendButton").click(function () {
+        if (uploadedImage) {
+          var formData = new FormData();
+          formData.append("uploadedImage", uploadedImage, uploadedImage.name);
+
+          var capturedImage = captureImage();
+          // Add padding characters to the captured image data
+          capturedImage = capturedImage.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+          capturedImage += '==='.slice((capturedImage.length + 3) % 4);
+          formData.append("capturedImage", capturedImage);
+
+          $.ajax({
+            url: "/facematch",  // Replace with your Flask server-side route to handle the upload
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+              console.log(response);
+            },
+            error: function (xhr, status, error) {
+              console.log(xhr.responseText);
+            }
+          });
+        } else {
+          console.log("Please upload an image.");
+        }
+      });
+
+    });
+  </script>
+</body>
+
+</html>

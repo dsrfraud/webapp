@@ -168,7 +168,7 @@ def get_prediction(img):
     
     predictions = prediction.sort_values(['class', "confidence"]).drop_duplicates("class",keep="last")
     
-    predictions = predictions[predictions['name'].isin(['p_number','name','parent','dob'])]
+    predictions = predictions[predictions['name'].isin(['p_number','name','parent','dob', 'photo'])]
     
 #     results.show()
     return predictions

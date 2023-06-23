@@ -31,10 +31,32 @@ background: linear-gradient(to right, #f64f59, #c471ed, #12c2e9); /* W3C, IE 10+
         }
     </style>
 </head>
-<body class="">
-    <div class="container text-center">
-        <h3>Coming Soon......</h3>
-        <h1>TecFera Solutions</h1>
+<body class="" id="bird">
+    <div class="container text-center" >
+        <h3 style="color: white; font-size: 2rem;">Coming Soon......</h3>
+        <h1 style="color: white; font-size: 3rem;">TecFera Solutions</h1>
     </div>
+
+
+  
+      
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
+      <script>
+      VANTA.BIRDS({
+        el: "#bird",
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 500.00,
+        minWidth: 200.00,
+        scale: 1.00,
+        scaleMobile: 1.00,
+        backgroundColor: 0x7192f,
+        color1: 0xff0000,
+        birdSize: 1.70,
+        separation: 31.00
+      })
+      </script>
 </body>
 </html>

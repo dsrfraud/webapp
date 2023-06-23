@@ -1,6 +1,6 @@
-from flask import Flask, Response, jsonify
-from flask import render_template
-from flask import request
+from flask import Flask, Response, jsonify, request, render_template
+
+
 from PIL import Image
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import  FileStorage
@@ -11,9 +11,11 @@ import yolo_prediction
 import cv2
 import numpy as np
 import io
+import json
+
+import speech_recognition as sr
 
 
-import base64 as b64
 import mediapipe as mp
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -37,7 +39,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-# cap=cv2.VideoCapture(0)
 
 def generate_frames(cap):
     
@@ -136,15 +137,112 @@ def generate_frames(cap):
         yield(b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
+
+
+def get_word():
+    words = ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape', 'honeydew', 'indigo', 'jujube', 'kiwi', 'lemon', 'mango', 
+    'nectarine', 'orange', 'peach', 'quince', 'raspberry', 'strawberry', 'tangerine', 'ugli', 'vanilla', 'watermelon', 'yellow', 'zebra']
+
+    np.random.shuffle(words)
+
+    return words[:3]
+
+
+def check_position(list1, list2):
+
+    mismatched_list = []
+    for i in range(len(list2)):
+        if list2[i].lower() != list1[i].lower():
+            mismatched_list.append(list2[i])
+    return mismatched_list
+
+
+@app.route('/facematch', methods = ['POST', "GET"])
+def facematch():
+    if request.method == "POST":
+        print(f'&*ERDF')
+        # Get the uploaded image file
+        uploaded_image = request.files['uploadedImage']
+        # Read the uploaded image using OpenCV
+        uploaded_image_cv2 = cv2.imdecode(np.fromfile(uploaded_image, np.uint8), cv2.IMREAD_COLOR)
+
+        # Get the captured image as a base64-encoded string
+        captured_image_base64 = request.form['capturedImage']
+        # Convert the base64-encoded captured image to a numpy array
+        captured_image_data = np.frombuffer(base64.b64decode(captured_image_base64), np.uint8)
+        captured_image_cv2 = cv2.imdecode(captured_image_data, cv2.IMREAD_COLOR)
+
+        skew = yolo_prediction.find_skew_angle(uploaded_image_cv2)
+        print(f'Skewness {skew}')
+        # print(f'SKEW ANgle {skew}')
+
+        rotated_image = yolo_prediction.rotate_image(uploaded_image_cv2, skew) 
+        # print("Roated")
+        predictions = yolo_prediction.get_prediction(rotated_image)
+        # print(predictions)
+        # Get the face coordinates for the photo
+        face_coordinates = predictions.loc[predictions['name'] == 'photo', ['xmin', 'ymin', 'xmax', 'ymax']].values[0]
+
+        # Convert coordinates to integers
+        xmin = int(face_coordinates[0])
+        ymin = int(face_coordinates[1])
+        xmax = int(face_coordinates[2])
+        ymax = int(face_coordinates[3])
+
+        # Crop the photo from the image
+        cropped_photo = uploaded_image_cv2[ymin:ymax, xmin:xmax]
+
+        print(cropped_photo)
+
+        
+
+        # print(uploaded_image_cv2, captured_image_cv2)
+    return render_template('facematch.html')
+
+
+@app.route('/audio', methods = ['POST', 'GET'])
+def audio():
+    words = get_word()
+    words = ",".join(word for word in words)
+    words = json.dumps(words)
+    if request.method == "POST":
+        if 'audio' not in request.files:
+            return 'No audio file found', 400
+    
+        audio_file = request.files['audio']
+        received_words = request.form.get('words')
+        recognizer = sr.Recognizer()
+
+        # Read the audio file
+        with sr.AudioFile(audio_file) as source:
+            audio = recognizer.record(source)
+
+        # Perform speech recognition
+        try:
+            text = recognizer.recognize_google(audio)
+            text = text.split(" ")
+            mismatched_list = check_position(received_words.split(","), text)
+            
+            data = {"spoke" : text}
+            return json.dumps(data)
+        except sr.UnknownValueError:
+            return {'error': 'Speech recognition could not understand audio'}
+        except sr.RequestError as e:
+            return {'error': f'Speech recognition service error: {str(e)}'}
+        
+    
+    return render_template('audio.html', words = words)
+
 @app.route('/video')
 def video():
     return Response(generate_frames(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/videodemo')
 def videoDe():
-    print(f"*"*20)
-    
-    return render_template('video2.html')
+    directions = np.array([['Forward', 'Looking Right', 'Forward', 'Looking Left', 'Forward', 'Looking Up','Forward', 'Looking Down'], ['Forward', 'Looking Left', 'Forward',
+    'Looking Right', 'Forward', 'Looking Up', 'Forward', 'Looking Down']])
+    np.random.shuffle(directions)
+    return render_template('video2.html', directions = json.dumps(directions[0].tolist()))
 
 @app.route("/", methods=['GET', "POST"])
 def home():
@@ -156,30 +254,12 @@ def hello_world():
         
         
         file = request.files['image']
-
-        
-        # file.save(secure_filename(file.filename))
-
         pil_image = Image.open(file)
-        # # Set the new size of the image
-        # new_size = (512, 512)
-
-        # # Resize the image using Pillow
-        # pil_image = pil_image.resize(new_size)
         data = io.BytesIO()
-
-        #First save image as in-memory.
         pil_image.save(data, "JPEG")
-
-        #Then encode the saved image file.
         encoded_img_data = base64.b64encode(data.getvalue())
 
         opencvImage = cv2.cvtColor(np.array(pil_image), cv2.COLOR_RGB2BGR)
-        # filename = file.filename
-        
-        
-        # file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        # filepath  = 'http://127.0.0.1:5000/static/uploads/'  + filename
 
         skew = yolo_prediction.find_skew_angle(opencvImage)
         # print(f'SKEW ANgle {skew}')
@@ -188,7 +268,6 @@ def hello_world():
         # print("Roated")
         predictions = yolo_prediction.get_prediction(rotated_image)
         result  = yolo_prediction.get_ocr(rotated_image, predictions)
-        print(result)
         return render_template('index.html', filename=encoded_img_data.decode('utf-8'),result = result) 
    
     return render_template('index.html')
@@ -198,6 +277,8 @@ import uuid
 @app.route('/upload', methods=['POST'])
 def upload():
     video = request.files['video']
+    directions = request.form.get('direction')
+    directions = directions.split(",")
     filename = str(uuid.uuid4())+"webm"
     video.save('/home/ubuntu/webapp/static/uploads/'+filename) 
     # Create a VideoCapture object to read the video
@@ -271,37 +352,47 @@ def upload():
                 # See where the user's head tilting
                 if y < -10:
                     text = "Looking Left"
-                    print("Looking Left, X = {0},Y={1}".format(x,y))
+                    # print("Looking Left, X = {0},Y={1}".format(x,y))
                 elif y > 15:
                     text = "Looking Right"
-                    print("Looking Right, X = {0},Y={1}".format(x,y))
+                    # print("Looking Right, X = {0},Y={1}".format(x,y))
                 elif x < -10:
                     text = "Looking Down"
-                    print("Looking Down, X = {0},Y={1}".format(x,y))
+                    # print("Looking Down, X = {0},Y={1}".format(x,y))
                 elif ((x > 0) & (x <15)):
                     text = "Forward"
-                    print("Forward, X = {0},Y={1}".format(x,y))
+                    # print("Forward, X = {0},Y={1}".format(x,y))
                 elif x>10:
                     text = "Looking Up"
-                    print("Looking Up, X = {0},Y={1}".format(x,y))
+                    # print("Looking Up, X = {0},Y={1}".format(x,y))
                 try:
                     result_list.append(text)
                 except:
                     result_list.append("")
-                # Add the text on the image
-                # cv2.putText(image, text, (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
-                # Display the nose direction
+                
                 nose_3d_projection, jacobian = cv2.projectPoints(nose_3d, rot_vec, trans_vec, cam_matrix, dist_matrix)
 
                 p1 = (int(nose_2d[0]), int(nose_2d[1]))
                 p2 = (int(nose_3d_projection[0][0][0]), int(nose_3d_projection[0][0][1]))
                 
                 # cv2.line(image, p1, p2, (255, 0, 0), 2)
-    print(result_list)
-    result_list = ", ".join(x for x in result_list)
-
-    return result_list
+    # print(result_list)
+    seen_directions = []
+    seen_directions.append(result_list[0])
+    for i,a in enumerate(result_list):
+        
+        if (i > 0) & (result_list[i] != result_list[i-1]):
+            seen_directions.append(a)
+    seen_directions = [i for i in seen_directions if i !=""]
+    print(f'Directions Detected : {seen_directions}')
+    
+    print(f'Directions Coming : {directions}')
+    # result_list = ", ".join(x for x in result_list)
+    if seen_directions == directions:
+        return "Successfully Matched"
+    
+    else:
+        return "Not Matched" 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', debug = True)
