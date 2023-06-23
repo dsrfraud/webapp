@@ -15,7 +15,7 @@ import json
 
 import speech_recognition as sr
 
-
+import face_recognition
 import mediapipe as mp
 
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
@@ -140,8 +140,8 @@ def generate_frames(cap):
 
 
 def get_word():
-    words = ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape', 'honeydew', 'indigo', 'jujube', 'kiwi', 'lemon', 'mango', 
-    'nectarine', 'orange', 'peach', 'quince', 'raspberry', 'strawberry', 'tangerine', 'ugli', 'vanilla', 'watermelon', 'yellow', 'zebra']
+    words = ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape', 'honeydew', 'indigo', 'kiwi', 'lemon', 'mango', 
+    'orange', 'peach', 'raspberry', 'strawberry', 'ugli', 'vanilla', 'watermelon', 'yellow', 'zebra']
 
     np.random.shuffle(words)
 
@@ -151,9 +151,16 @@ def get_word():
 def check_position(list1, list2):
 
     mismatched_list = []
+    matched_list = []
     for i in range(len(list2)):
-        if list2[i].lower() != list1[i].lower():
-            mismatched_list.append(list2[i])
+        try:
+            if list2[i].lower() != list1[i].lower():
+                mismatched_list.append(list2[i])
+            
+
+            
+        except Exception as e:
+            pass
     return mismatched_list
 
 
@@ -192,7 +199,39 @@ def facematch():
         # Crop the photo from the image
         cropped_photo = uploaded_image_cv2[ymin:ymax, xmin:xmax]
 
-        print(cropped_photo)
+        # Convert the BGR images to RGB format
+        captured_image_rgb = cv2.cvtColor(cropped_photo, cv2.COLOR_BGR2RGB)
+        uploaded_image_rgb = cv2.cvtColor(captured_image_cv2, cv2.COLOR_BGR2RGB)
+
+        cv2.imwrite("captured.jpg", captured_image_rgb)
+        cv2.imwrite("uploaded_image_rgb.jpg", uploaded_image_rgb)
+
+        # Find face locations and encodings in the images
+        captured_face_locations = face_recognition.face_locations(captured_image_rgb)
+        captured_face_encodings = face_recognition.face_encodings(captured_image_rgb, captured_face_locations)
+        uploaded_face_locations = face_recognition.face_locations(uploaded_image_rgb)
+        uploaded_face_encodings = face_recognition.face_encodings(uploaded_image_rgb, uploaded_face_locations)
+
+        # Check if at least one face is found in each image
+        if len(captured_face_encodings) > 0 and len(uploaded_face_encodings) > 0:
+            # Take the first face from each image
+            captured_encoding = captured_face_encodings[0]
+            uploaded_encoding = uploaded_face_encodings[0]
+
+            # Compare the face encodings
+            match_percentage = face_recognition.face_distance([captured_encoding], uploaded_encoding)
+            match_percentage = (1 - match_percentage[0]) * 100
+
+            # Print the match percentage
+            print("Match percentage:", match_percentage)
+        else:
+            print("No face found in one or both of the images.")
+
+        if match_percentage:
+            data = {
+                "Matched Score" : int(match_percentage)
+            }
+            return jsonify(data)
 
         
 
@@ -222,9 +261,10 @@ def audio():
             text = recognizer.recognize_google(audio)
             text = text.split(" ")
             mismatched_list = check_position(received_words.split(","), text)
+            print(f'Mismatched Words {mismatched_list}')
             
-            data = {"spoke" : text}
-            return json.dumps(data)
+            data = {"spoke" : text, "mismatched" : mismatched_list}
+            return jsonify(data)
         except sr.UnknownValueError:
             return {'error': 'Speech recognition could not understand audio'}
         except sr.RequestError as e:

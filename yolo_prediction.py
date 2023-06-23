@@ -33,28 +33,20 @@ from scipy.stats import mode
 
 
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
-# pytesseract.pytesseract.tesseract_cmd=r'C:\Users\ACER\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
+try:
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+except:
+    pytesseract.pytesseract.tesseract_cmd=r'C:\Users\ACER\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'
 
 
 # In[15]:
 
 
-model_path = r'/home/ubuntu/webapp/models/best.pt'
+model_path = r'./models/best.pt'
 model = torch.hub.load('ultralytics/yolov5', 'custom',path=model_path)
 
 
-# In[16]:
 
-
-# image_path = r"D:\Pan\pandata\final_data\pancard_1.jpeg"
-
-
-# image = rgb2gray(imread(image_path))
-# edges = canny(image)
-# # Classic straight-line Hough transform
-# tested_angles = np.deg2rad(np.arange(0.1, 180.0))
-# h, theta, d = hough_line(edges, theta=tested_angles)
 
 
 

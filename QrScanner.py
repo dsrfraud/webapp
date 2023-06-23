@@ -1,26 +1,54 @@
+from PIL import Image
 import cv2
-import numpy as np
-from pyzbar import pyzbar
+import face_recognition
+from IPython.display import display, clear_output
 
+# Load the image containing the reference face
+reference_image = face_recognition.load_image_file(r"D:\Pan\pandata\raja.jpg")
 
-img = cv2.imread(r"/home/ubuntu/webapp/qr.jpg")
+# Extract the face encoding from the reference image
+reference_encoding = face_recognition.face_encodings(reference_image)[0]
 
+# Open the video capture
+video_capture = cv2.VideoCapture(0)
 
-# gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+while True:
+    # Read a frame from the video capture
+    ret, frame = video_capture.read()
 
-# thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+    # Convert the frame to RGB format
+    rgb_frame = frame[:, :, ::-1]
 
-# contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Find all the face locations and encodings in the current frame
+    face_locations = face_recognition.face_locations(rgb_frame, model='cnn')
+    face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
+    # Iterate over the face encodings found in the current frame
+    for face_encoding in face_encodings:
+        # Compare the face encoding with the reference encoding
+        match_score = face_recognition.compare_faces([reference_encoding], face_encoding)[0]
+        
+        match_percentage = face_recognition.face_distance([reference_encoding], face_encoding)
+        match_percentage = (1 - match_percentage[0]) * 100
 
-# for contour in contours:
-#     (x, y, w, h) = cv2.boundingRect(contour)
-#     crop_img = img[y:y+h, x:x+w]
-#     decoded = pyzbar.decode(crop_img)
+        # Print the match score
+        print("Match score:", match_score, match_percentage)
 
-#     if decoded:
-#         print("QR code data:", decoded[0].data.decode('utf-8'))
-#         print("QR code type:", decoded[0].type)
-#         print("QR code location:", (x, y, w, h))
+    # Display the frame with bounding boxes around the detected faces
+    for (top, right, bottom, left) in face_locations:
+        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
 
-print("QR code data:", pyzbar.decode(img))
+    # Convert the frame from OpenCV BGR to PIL RGB format for Jupyter Notebook display
+    pil_frame = Image.fromarray(frame)
+
+    # Display the frame in Jupyter Notebook
+    display(pil_frame)
+    clear_output(wait=True)
+
+    # Break the loop if 'q' is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Release the video capture and close the OpenCV windows
+video_capture.release()
+cv2.destroyAllWindows()

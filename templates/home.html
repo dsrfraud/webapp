@@ -1,37 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
+{% extends 'base.html' %}
+{% block content %}
+    
 
-        .container {
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            /* Adjust the styles for smaller screens */
-            .container {
-                padding: 0 20px;
-            }
-        }
-
-        .UI {
-            background: #12c2e9;  /* fallback for old browsers */
-background: -webkit-linear-gradient(to right, #f64f59, #c471ed, #12c2e9);  /* Chrome 10-25, Safari 5.1-6 */
-background: linear-gradient(to right, #f64f59, #c471ed, #12c2e9); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-
-        }
-    </style>
-</head>
-<body class="" id="bird">
+<div class="" id="bird">
     <div class="container text-center" >
         <h3 style="color: white; font-size: 2rem;">Coming Soon......</h3>
         <h1 style="color: white; font-size: 3rem;">TecFera Solutions</h1>
@@ -58,5 +29,5 @@ background: linear-gradient(to right, #f64f59, #c471ed, #12c2e9); /* W3C, IE 10+
         separation: 31.00
       })
       </script>
-</body>
-</html>
+</div>
+{% endblock %}

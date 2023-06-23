@@ -1,9 +1,6 @@
-<!DOCTYPE html>
-<html>
+{% extends 'base.html' %}
 
-<head>
-  <title>Image Upload and Face Capture</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% block content %}
   <style>
     #videoContainer {
       display: flex;
@@ -37,9 +34,7 @@
       text-align: center;
     }
   </style>
-</head>
 
-<body>
   <div class="container mt-5">
     <h1>Image Upload and Face Capture</h1>
     <div class="row">
@@ -66,8 +61,8 @@
     <button id="sendButton" class="btn btn-primary d-block mx-auto">Send Images</button>
   </div>
 
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script> -->
   <script>
     $(document).ready(function () {
       var uploadedImage = null;
@@ -148,7 +143,7 @@
             processData: false,
             contentType: false,
             success: function (response) {
-              console.log(response);
+              alert(response['Matched Score'])
             },
             error: function (xhr, status, error) {
               console.log(xhr.responseText);
@@ -161,6 +156,4 @@
 
     });
   </script>
-</body>
-
-</html>
+{% endblock %}
